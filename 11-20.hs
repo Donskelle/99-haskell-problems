@@ -51,8 +51,7 @@ decodeModified list = foldl (convertToString) [] list
   where convertToString accu (Multiple count char) = accu ++ take count (repeat char)
         convertToString accu (Single char) = accu ++ [char]
 
--- * (encode-direct '(a a a a b c c a a d e e e e))
--- ((4 A) B (2 C) (2 A) D (4 E))
+
 -- λ> encodeDirect "aaaabccaadeeee"
 -- [Multiple 4 'a',Single 'b',Multiple 2 'c',
 --  Multiple 2 'a',Single 'd',Multiple 4 'e']
@@ -72,16 +71,20 @@ repli list repliCount = foldl(\accu x -> accu ++ take repliCount (repeat x)) [] 
 -- λ> dropEvery "abcdefghik" 3
 -- "abdeghk"
 dropEvery :: [a] -> Int -> [a]
-dropEvery list count = map (snd) ((filter (\x -> x mod count /= 0).fst) (zip [1..] list))
+dropEvery list count = map fst (filter ((\x -> x `mod` count /= 0).snd) (zip list [1..]))
+
 
 -- λ> split "abcdefghik" 3
 -- ("abc", "defghik")
--- split :: [a] -> Int -> [a]
+split :: [a] -> Int -> ([a], [a])
+split list count = (take count list, drop count list)
+split' list count = splitAt count list
 
 
 -- λ> slice ['a','b','c','d','e','f','g','h','i','k'] 3 7
 -- "cdefg"
--- slice :: (Int b) => [a] -> b -> b -> [a]
+slice :: [a] -> Int -> Int -> [a]
+slice list start end = take (end - start + 1) (drop (start-1) list)
 
 
 -- λ> rotate ['a','b','c','d','e','f','g','h'] 3
@@ -89,8 +92,13 @@ dropEvery list count = map (snd) ((filter (\x -> x mod count /= 0).fst) (zip [1.
 -- λ> rotate ['a','b','c','d','e','f','g','h'] (-2)
 -- "ghabcdef"
 -- rotate :: [a] -> Int -> [a]
+rotate :: [a] -> Int -> [a]
+rotate list count = drop count list ++ take count list
 
 
 -- λ> removeAt 2 "abcd"
 -- ('b',"acd")
--- removeAt :: Int -> [a]
+removeAt :: Int -> [a] ->  (a, [a])
+removeAt pos list
+  | pos > length list = error "Int out of range"
+  | otherwise = (list!!(pos-1), let (ys,zs) = splitAt (pos-1) list in ys ++ (tail zs))
