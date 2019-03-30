@@ -15,6 +15,7 @@ myLength :: [a] -> Int
 myLength list = length list
 myLength' [] = 0
 myLength' (x:xs) = 1 + myLength' xs
+myLength'' list = foldl (+) 0 (map (\x -> 1) list)
 
 myReverse :: [a] -> [a]
 myReverse [] = []
@@ -36,8 +37,8 @@ myFlatten (List []) = []
 myFlatten (List (x:xs)) = myFlatten x ++ myFlatten (List xs)
 
 
--- (A B C A D E)
 -- * (compress '(a a a a b c c a a d e e e e))
+-- (A B C A D E)
 compress :: Eq a => [a] -> [a]
 compress [] = []
 compress list = compressInternal list []
