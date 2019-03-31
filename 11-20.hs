@@ -9,11 +9,11 @@ encodeModified :: (Eq a) => [a] -> [ListItem a]
 encodeModified [] = []
 encodeModified list = encodeInternal list []
   where encodeInternal [] accu = accu
-        encodeInternal (x:xs) accu = encodeInternal xs (add x accu)
+        encodeInternal (x:xs) accu = encodeInternal xs $ add x accu
           where add char [] = [Single char]
-                add char (y:ys)
-                  | containsEle y char = [increaseList y] ++ ys
-                  | otherwise = [y] ++ (add char ys)
+                add char ls
+                  | containsEle (last ls) char = init ls ++ [increaseList $ last ls ]
+                  | otherwise = ls ++ [Single char]
 
 containsEle :: (Eq a) => ListItem a -> a -> Bool
 containsEle (Multiple _ a) b 
@@ -27,8 +27,8 @@ increaseList :: ListItem a -> ListItem a
 increaseList (Multiple count char) = Multiple (count+1) char
 increaseList (Single char) = Multiple 2 char
 
-addToHead :: [ListItem a] -> [ListItem a]
-addToHead (x:xs) = xs ++  [increaseList x] 
+addToLast :: [ListItem a] -> [ListItem a]
+addToLast ls = init ls ++ [increaseList $ last ls] 
 
 encodeModified' :: (Eq a) => [a] -> [ListItem a]
 encodeModified' [] = []
@@ -37,9 +37,8 @@ encodeModified' list = foldl (increaseList') [] list
 increaseList' :: (Eq a) => [ListItem a] -> a -> [ListItem a]
 increaseList' [] char = [Single char]
 increaseList' acc char
-  | containsEle (head acc) char = addToHead acc
+  | containsEle (last acc) char = addToLast acc
   | otherwise = acc ++ [Single char]
-
 
 -- λ> decodeModified 
 --        [Multiple 4 'a',Single 'b',Multiple 2 'c',
@@ -71,7 +70,7 @@ repli list repliCount = foldl(\accu x -> accu ++ take repliCount (repeat x)) [] 
 -- λ> dropEvery "abcdefghik" 3
 -- "abdeghk"
 dropEvery :: [a] -> Int -> [a]
-dropEvery list count = map fst (filter ((\x -> x `mod` count /= 0).snd) (zip list [1..]))
+dropEvery list count = map fst $ filter ((\x -> x `mod` count /= 0).snd) $ zip list [1..]
 
 
 -- λ> split "abcdefghik" 3
@@ -84,7 +83,7 @@ split' list count = splitAt count list
 -- λ> slice ['a','b','c','d','e','f','g','h','i','k'] 3 7
 -- "cdefg"
 slice :: [a] -> Int -> Int -> [a]
-slice list start end = take (end - start + 1) (drop (start-1) list)
+slice list start end = take (end - start + 1) $ drop (start-1) list
 
 
 -- λ> rotate ['a','b','c','d','e','f','g','h'] 3
@@ -94,6 +93,11 @@ slice list start end = take (end - start + 1) (drop (start-1) list)
 -- rotate :: [a] -> Int -> [a]
 rotate :: [a] -> Int -> [a]
 rotate list count = drop count list ++ take count list
+rotate' [] count = error "empty list"
+rotate' (x:xs) count
+  | count == 0 = x:xs
+  | count < 0 = rotate' ((last (x:xs)):(init (x:xs))) $ count+1
+  | otherwise = rotate' (xs++[x]) (count - 1)
 
 
 -- λ> removeAt 2 "abcd"
@@ -101,4 +105,5 @@ rotate list count = drop count list ++ take count list
 removeAt :: Int -> [a] ->  (a, [a])
 removeAt pos list
   | pos > length list = error "Int out of range"
-  | otherwise = (list!!(pos-1), let (ys,zs) = splitAt (pos-1) list in ys ++ (tail zs))
+  | otherwise = (list!!arrPos, let (ys,zs) = splitAt arrPos list in ys ++ tail zs)
+    where arrPos = pos - 1
