@@ -38,8 +38,7 @@ primeFactors number = findPrimeFactor number 0
       | primeFac `mod` createInfPrimes!!n == 0 = createInfPrimes!!n : findPrimeFactor (div primeFac (createInfPrimes!!n)) 0
       | otherwise = findPrimeFactor primeFac $ n + 1 
 
--- divideWithoutrest :: Int -> Int -> Int
--- divideWithoutrest main divideValue = tokc
+
 -- λ> prime_factors_mult 315
 -- [(3,2),(5,1),(7,1)]
 
